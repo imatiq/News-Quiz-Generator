@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Viewer</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 0 20px;
+    background: #f5f5f7;
+    color: #1d1d1f;
+  }
+  h1 { font-size: 1.6rem; margin-bottom: 20px; }
+
+  /* ---- Category selector ---- */
+  .selector {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+  .cat-btn {
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 24px;
+    border: 2px solid #d2d2d7;
+    background: #fff;
+    color: #1d1d1f;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .cat-btn:hover { border-color: #0071e3; color: #0071e3; }
+  .cat-btn.active {
+    background: #0071e3;
+    border-color: #0071e3;
+    color: #fff;
+  }
+
+  /* ---- Cards ---- */
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  }
+  .category-badge {
+    display: inline-block;
+    background: #0071e3;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .title { font-size: 1.3rem; font-weight: 700; margin: 8px 0 12px; }
+  .paragraph { line-height: 1.6; color: #424245; margin-bottom: 16px; }
+  .meta { font-size: 0.85rem; color: #86868b; margin-bottom: 16px; }
+  .meta a { color: #0071e3; text-decoration: none; }
+  .meta a:hover { text-decoration: underline; }
+
+  /* ---- Quiz ---- */
+  .quiz {
+    border: 1px solid #e5e5ea;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .quiz .q { font-weight: 600; margin-bottom: 10px; }
+  .quiz .options { display: flex; flex-direction: column; gap: 8px; }
+  .option {
+    text-align: left;
+    background: #f5f5f7;
+    border: 1px solid #e5e5ea;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    font-family: inherit;
+    color: inherit;
+  }
+  .option:hover:not(:disabled) { background: #e8e8ed; }
+  .option:disabled { cursor: default; opacity: 0.95; }
+  .option.correct { background: #d1f7dc; border-color: #34c759; font-weight: 600; }
+  .option.wrong   { background: #ffd6d6; border-color: #ff3b30; font-weight: 600; }
+
+  .fact {
+    background: #f5f5f7;
+    border-left: 4px solid #0071e3;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-top: 12px;
+    font-size: 0.95rem;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  .fact.show { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .feedback { margin-top: 8px; font-weight: 600; font-size: 0.9rem; display: none; }
+  .feedback.show { display: block; }
+  .feedback.correct { color: #34c759; }
+  .feedback.wrong   { color: #ff3b30; }
+
+  .empty, .error { color: #86868b; font-weight: 600; text-align: center; padding: 30px 0; }
+  .error { color: #ff3b30; }
+</style>
+</head>
+<body>
+
+<h1>📰 Quiz Viewer</h1>
+
+<!-- Category selector -->
+<div class="selector" id="selector">
+  <button class="cat-btn" data-cat="International Affairs">🌍 International Affairs</button>
+  <button class="cat-btn" data-cat="Current Affairs">🗞️ Current Affairs</button>
+  <button class="cat-btn" data-cat="Political Affairs">🏛️ Political Affairs</button>
+</div>
+
+<div id="app">Loading…</div>
+
+<script>
+let allItems = [];          // full parsed JSONL
+let activeCategory = "";    // currently selected category
+
+const app = document.getElementById("app");
+const selector = document.getElementById("selector");
+
+/* ---------- Load data ---------- */
+async function loadQuizzes() {
+  try {
+    const res = await fetch("data/quizzes.jsonl");
+    if (!res.ok) throw new Error(`HTTP ${res.status} — could not load quizzes.jsonl`);
+    const text = await res.text();
+
+    allItems = text
+      .split("\n")
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .map(line => JSON.parse(line));
+
+    // Auto-select first available category from the data
+    const categories = [...new Set(allItems.map(i => i.category).filter(Boolean))];
+    const first = categories.find(c => ["International Affairs","Current Affairs","Political Affairs"].includes(c))
+               || categories[0];
+    if (first) selectCategory(first);
+    else renderEmpty("No quizzes found in quizzes.jsonl.");
+  } catch (err) {
+    app.innerHTML = `<p class="error">Failed to load quizzes: ${escapeHtml(err.message)}</p>
+      <p>Make sure <code>quizzes.jsonl</code> is in the same folder as this HTML file,
+      and serve over HTTP (e.g. <code>python -m http.server</code>).</p>`;
+  }
+}
+
+/* ---------- Category handling ---------- */
+selector.addEventListener("click", (e) => {
+  const btn = e.target.closest(".cat-btn");
+  if (!btn) return;
+  selectCategory(btn.dataset.cat);
+});
+
+function selectCategory(category) {
+  activeCategory = category;
+
+  // Highlight active button
+  document.querySelectorAll(".cat-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.cat === category);
+  });
+
+  renderCategory(category);
+}
+
+function renderCategory(category) {
+  const matches = allItems.filter(i => i.category === category);
+
+  if (matches.length === 0) {
+    renderEmpty(`No quizzes yet in "${category}".`);
+    return;
+  }
+
+  app.innerHTML = "";
+  matches.forEach(item => app.appendChild(renderItem(item)));
+}
+
+function renderEmpty(msg) {
+  app.innerHTML = `<p class="empty">${escapeHtml(msg)}</p>`;
+}
+
+/* ---------- Render one quiz item ---------- */
+function renderItem(item) {
+  const card = document.createElement("div");
+  card.className = "card";
+
+  card.innerHTML = `
+    <span class="category-badge">${escapeHtml(item.category || "Uncategorized")}</span>
+    <div class="title">${escapeHtml(item.title || "")}</div>
+    <div class="meta">
+      ${escapeHtml(item.date || "")} &nbsp;·&nbsp;
+      <a href="${escapeHtml(item.source_url || "#")}" target="_blank" rel="noopener">Source</a>
+    </div>
+  `;
+
+  (item.QuizAndFact || []).forEach((entry) => {
+    // Fact block (hidden until answered)
+    const factEl = document.createElement("div");
+    factEl.className = "fact";
+    factEl.innerHTML = `<strong>Fact:</strong> ${escapeHtml(entry.fact)}`;
+
+    // Question(s) for this fact
+    Object.keys(entry)
+      .filter(key => key !== "fact")
+      .forEach(key => {
+        const q = entry[key];
+        if (!q || !q.question) return;
+
+        const quizEl = document.createElement("div");
+        quizEl.className = "quiz";
+
+        const qText = document.createElement("div");
+        qText.className = "q";
+        qText.textContent = q.question;
+        quizEl.appendChild(qText);
+
+        const optionsWrap = document.createElement("div");
+        optionsWrap.className = "options";
+        const correctLetter = String(q.Ans || "").trim().toUpperCase();
+
+        Object.entries(q.Options || {}).forEach(([letter, text]) => {
+          const btn = document.createElement("button");
+          btn.className = "option";
+          btn.type = "button";
+          btn.dataset.letter = letter.toUpperCase();
+          btn.textContent = `${letter.toUpperCase()}. ${text}`;
+          btn.addEventListener("click", () =>
+            handleAnswer({ btn, optionsWrap, correctLetter, factEl, quizEl })
+          );
+          optionsWrap.appendChild(btn);
+        });
+
+        quizEl.appendChild(optionsWrap);
+
+        const feedback = document.createElement("div");
+        feedback.className = "feedback";
+        quizEl.appendChild(feedback);
+
+        card.appendChild(quizEl);
+      });
+
+    card.appendChild(factEl);
+  });
+
+  return card;
+}
+
+/* ---------- Answer logic ---------- */
+function handleAnswer({ btn, optionsWrap, correctLetter, factEl, quizEl }) {
+  const chosen = btn.dataset.letter;
+
+  Array.from(optionsWrap.querySelectorAll(".option")).forEach(b => {
+    b.disabled = true;
+    if (b.dataset.letter === correctLetter) b.classList.add("correct");
+  });
+
+  if (chosen !== correctLetter) btn.classList.add("wrong");
+
+  const feedback = quizEl.querySelector(".feedback");
+  if (chosen === correctLetter) {
+    feedback.textContent = "✅ Correct!";
+    feedback.classList.add("correct");
+  } else {
+    feedback.textContent = `❌ Wrong — the correct answer is ${correctLetter}.`;
+    feedback.classList.add("wrong");
+  }
+  feedback.classList.add("show");
+
+  factEl.classList.add("show");
+}
+
+/* ---------- Utils ---------- */
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+loadQuizzes();
+</script>
+
+</body>
+</html>
