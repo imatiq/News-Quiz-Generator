@@ -10,7 +10,7 @@ from Classifier.ParagraphClassifier import paragraphClassifier
 from Generator.QuizGenerator import quizGenerator, AllModelsExhausted
 from Scrappers.ExpressTribune import TribuneScraper
 from Scrappers.ScrapeNews import NewsRunner
-from Utils import log
+from utils import log
 
 QUIZ_FILE = "quizzes.jsonl"
 REJECTED_FILE = "rejected_hashes.txt"   # paragraphs the classifier called irrelevant

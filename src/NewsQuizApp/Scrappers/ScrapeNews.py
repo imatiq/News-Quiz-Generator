@@ -2,10 +2,8 @@ import asyncio
 import os
 import socket
 from urllib.parse import urlparse
-
-from NewsQuizApp.Generator.QuizGenerator import AllModelsExhausted  # same import style as main.py
-from NewsQuizApp.Utils import log
-
+from Generator.QuizGenerator import AllModelsExhausted
+from utils import log
 
 class NewsRunner:
     def __init__(self, scrapers: dict, active_urls_file: str = "active_urls.txt"):
