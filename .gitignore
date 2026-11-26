@@ -20,3 +20,9 @@ rejected_hashes.txt
 last_scraped*
 *.log
 EOF
+
+.mypy_cache/
+.coverage
+htmlcov/
+data/*
+!data/.gitkeep
