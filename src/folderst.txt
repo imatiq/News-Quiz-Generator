@@ -1,0 +1,25 @@
+NewsScrapper/
+├── scrapers/ExpressTribuneScrapper.py
+├── processing/cleaner.py
+├── classifier/paragraph_classifier.py
+├── quiz/quiz_generator.py
+├── storage/quiz_store.py
+├── pipeline.py              # runs all stages
+├── data/news.db
+└── logs/
+
+
+
+
+clf, qg, store = ParagraphClassifier(), QuizGenerator(), QuizStore("data/news.db")
+
+for para in scraper.scrape_latest():              # stage 1, already limited to the last 24 hours
+    para = clean(para)                            # stage 2
+    if not para or store.exists(para):            # skip short or duplicate paragraphs
+        continue
+    c = clf.classify(para["text"])                # stage 3
+    if not c:
+        store.save_irrelevant(para)
+        continue
+    result = qg.generate(c)                       # stage 4
+    store.save(result) if result else store.save_rejected(para, c)   # stage 5

@@ -1,0 +1,22 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# environments / tools
+.venv/
+venv/
+.idea/
+.vscode/
+.ruff_cache/
+
+# python
+__pycache__/
+*.pyc
+
+# generated data
+quizzes.jsonl
+rejected_hashes.txt
+last_scraped*
+*.log
+EOF
