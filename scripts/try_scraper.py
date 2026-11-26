@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta
-from NewsQuizApp.Scrappers.ExpressTribune import TribuneScraper
+
+from news_quiz_app.scrapers.express_tribune import TribuneScraper
 
 START_URL = "https://tribune.com.pk/"
 MAX_ARTICLES = 2

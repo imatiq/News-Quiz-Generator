@@ -208,8 +208,8 @@ class quizGenerator:
             return None
 
         random.shuffle(options)  # so the correct answer is not always in the same position
-        letter_map = dict(zip(self.LETTERS, options))
-        correct_letter = next(l for l, o in letter_map.items() if o == correct)
+        letter_map = dict(zip(self.LETTERS, options, strict=False))
+        correct_letter = next(letter for letter, o in letter_map.items() if o == correct)
 
         return {
             "fact": fact,

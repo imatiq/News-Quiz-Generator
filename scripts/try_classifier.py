@@ -1,4 +1,4 @@
-from NewsQuizApp.Classifier.ParagraphClassifier import paragraphClassifier
+from news_quiz_app.classifier.paragraph_classifier import paragraphClassifier
 
 # (text, expected label; None means it should be ignored)
 SAMPLES = [

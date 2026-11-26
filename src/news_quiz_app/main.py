@@ -6,14 +6,14 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-from Classifier.ParagraphClassifier import paragraphClassifier
-from Generator.QuizGenerator import quizGenerator, AllModelsExhausted
-from Scrappers.ExpressTribune import TribuneScraper
-from Scrappers.ScrapeNews import NewsRunner
-from utils import log
+from news_quiz_app.classifier.paragraph_classifier import paragraphClassifier
+from news_quiz_app.generator.quiz_generator import AllModelsExhausted, quizGenerator
+from news_quiz_app.scrapers.express_tribune import TribuneScraper
+from news_quiz_app.scrapers.scrape_news import NewsRunner
+from news_quiz_app.utils import log
 
-QUIZ_FILE = "quizzes.jsonl"
-REJECTED_FILE = "rejected_hashes.txt"   # paragraphs the classifier called irrelevant
+QUIZ_FILE = "data/quizzes.jsonl"
+REJECTED_FILE = "data/rejected_hashes.txt"   # paragraphs the classifier called irrelevant
 INTERVAL_MINUTES = 60
 
 # ---- speed settings (tune these) ----
@@ -27,7 +27,7 @@ clf = paragraphClassifier()
 qg = quizGenerator()
 runner = NewsRunner(
     scrapers={"tribune.com.pk": TribuneScraper},   # domain -> scraper class
-    active_urls_file="active_urls.txt",
+    active_urls_file="config/active_urls.txt",
 )
 
 
@@ -40,7 +40,7 @@ def load_seen() -> set:
     # (source_url, paragraph_hash) of quizzes already saved
     seen = set()
     if os.path.exists(QUIZ_FILE):
-        with open(QUIZ_FILE, "r", encoding="utf-8") as f:
+        with open(QUIZ_FILE, encoding="utf-8") as f:
             for line in f:
                 try:
                     q = json.loads(line)
@@ -54,7 +54,7 @@ def load_seen() -> set:
 def load_rejected() -> set:
     if not os.path.exists(REJECTED_FILE):
         return set()
-    with open(REJECTED_FILE, "r", encoding="utf-8") as f:
+    with open(REJECTED_FILE, encoding="utf-8") as f:
         return {line.strip() for line in f if line.strip()}
 
 
@@ -166,7 +166,7 @@ def process_article(article: dict) -> int:
         classified = list(pool.map(classify_one, candidates))
 
     relevant = []
-    for paragraph, h, result, ok in classified:
+    for _paragraph, h, result, ok in classified:
         if not ok:
             continue                 # failed: retry next run
         if not result:

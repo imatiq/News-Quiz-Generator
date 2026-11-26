@@ -5,7 +5,7 @@ Returns {"Category": ..., "Paragraph": ...} for Political Affairs, Current Affai
 or International Affairs. Anything else (ads, entertainment, sports, etc.) returns None.
 
 Usage:
-    from NewsScrappers.Classifier import ParagraphClassifier
+    from news_quiz_app.classifier.paragraph_classifier import paragraphClassifier
 
     clf = ParagraphClassifier()          # create once, reuse
     result = clf.classify(text)          # dict, or None if irrelevant

@@ -2,11 +2,13 @@ import asyncio
 import os
 import socket
 from urllib.parse import urlparse
-from Generator.QuizGenerator import AllModelsExhausted
-from utils import log
+
+from news_quiz_app.generator.quiz_generator import AllModelsExhausted
+from news_quiz_app.utils import log
+
 
 class NewsRunner:
-    def __init__(self, scrapers: dict, active_urls_file: str = "active_urls.txt"):
+    def __init__(self, scrapers: dict, active_urls_file: str = "config/active_urls.txt"):
         self.scrapers = scrapers  # {"domain": ScraperClass}
         self.active_urls_file = active_urls_file
         self._active = []  # scrapers created in the current run
@@ -45,7 +47,7 @@ class NewsRunner:
         if not os.path.exists(self.active_urls_file):
             log(f"❌ {self.active_urls_file} not found.")
             return []
-        with open(self.active_urls_file, "r", encoding="utf-8") as f:
+        with open(self.active_urls_file, encoding="utf-8") as f:
             urls = [line.strip() for line in f if line.strip()]
         log(f"✅ Loaded {len(urls)} active URLs.")
         return urls

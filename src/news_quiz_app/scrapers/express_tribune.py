@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 
 
 class TribuneScraper:
-    LAST_SCRAPED_FILE = "last_scraped.txt"
+    LAST_SCRAPED_FILE = "data/last_scraped.txt"
 
     def __init__(self, start_url: str):
         self.base_url = start_url
@@ -21,7 +21,7 @@ class TribuneScraper:
     def last_scraped_date(self) -> datetime:
         # last_scraped.txt format: link|YYYY-MM-DD  (ek line per site)
         if os.path.exists(self.LAST_SCRAPED_FILE):
-            with open(self.LAST_SCRAPED_FILE, "r", encoding="utf-8") as f:
+            with open(self.LAST_SCRAPED_FILE, encoding="utf-8") as f:
                 for line in f:
                     if "|" not in line:
                         continue
@@ -36,7 +36,7 @@ class TribuneScraper:
     def save_last_scraped_date(self, date: datetime):
         lines, found = [], False
         if os.path.exists(self.LAST_SCRAPED_FILE):
-            with open(self.LAST_SCRAPED_FILE, "r", encoding="utf-8") as f:
+            with open(self.LAST_SCRAPED_FILE, encoding="utf-8") as f:
                 for line in f:
                     if line.strip().startswith(self.base_url + "|"):
                         lines.append(f"{self.base_url}|{date.strftime('%Y-%m-%d')}\n")
@@ -118,27 +118,6 @@ class TribuneScraper:
         except Exception as e:
             print(f"❌ Error extracting article: {e}")
             return None
-
-    # ---------- Crawl ----------
-    async def scrape_page(self, session, url) -> set:
-        try:
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:
-                if response.status != 200:
-                    return set()
-
-                html = await response.text()
-                soup = BeautifulSoup(html, "html.parser")
-
-                if self.is_valid(url):
-                    article = self.extract_article_data(soup, url)
-                    if article:
-                        self.articles.append(article)
-
-                return self.get_links(soup, url)
-
-        except Exception as e:
-            print(f"⚠️ Error scraping {url}: {e}")
-            return set()
 
     # ---------- Crawl ----------
     async def scrape_page(self, session, url) -> tuple[dict | None, set]:

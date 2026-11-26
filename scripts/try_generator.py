@@ -1,5 +1,6 @@
 import json
-from NewsQuizApp.Generator.QuizGenerator import quizGenerator
+
+from news_quiz_app.generator.quiz_generator import quizGenerator
 
 qg = quizGenerator()
 item = {

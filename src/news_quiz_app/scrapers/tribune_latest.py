@@ -4,7 +4,7 @@ from urllib.parse import urljoin
 import aiohttp
 from bs4 import BeautifulSoup
 
-from NewsQuizApp.Scrappers.ExpressTribune import TribuneScraper
+from news_quiz_app.scrapers.express_tribune import TribuneScraper
 
 
 class TribuneLatestNewsScrapper(TribuneScraper):
