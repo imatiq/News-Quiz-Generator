@@ -1,6 +1,6 @@
 # News Quiz Generator
 
-Generates MCQ quizzes from the latest Pakistani and world news.
+Generates MCQ quizzes And Facts from the latest News Like (International Affairs, Political Affairs and Current Affairs) .
 
 ## Pipeline
 
