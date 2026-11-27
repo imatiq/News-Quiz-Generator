@@ -15,7 +15,8 @@ __pycache__/
 *.pyc
 
 # generated data
-quizzes.jsonl
+*.jsonl
+!quizzes.jsonl
 rejected_hashes.txt
 last_scraped*
 *.log
@@ -26,3 +27,4 @@ EOF
 htmlcov/
 data/*
 !data/.gitkeep
+!data/quizzes.jsonl
