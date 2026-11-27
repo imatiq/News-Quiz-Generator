@@ -13,18 +13,15 @@ venv/
 # python
 __pycache__/
 *.pyc
-
-# generated data
-*.jsonl
-!quizzes.jsonl
-rejected_hashes.txt
-last_scraped*
-*.log
-EOF
-
 .mypy_cache/
 .coverage
 htmlcov/
+
+# generated data
+*.jsonl
 data/*
 !data/.gitkeep
 !data/quizzes.jsonl
+rejected_hashes.txt
+last_scraped*
+*.log
